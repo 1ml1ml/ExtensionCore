@@ -11,6 +11,9 @@ public:
 	using MapII = std::unordered_map<int, int>;
 
 public:
+	static inline double s_d;
+
+public:
 	MyStruct();
 
 public:
@@ -24,6 +27,7 @@ private:
 };
 RTTR_REGISTER_TYPE(MyStruct)
 
+RTTR_REGISTER_TYPE(double)
 RTTR_REGISTER_TYPE(int)
 RTTR_REGISTER_TYPE(std::string)
 RTTR_REGISTER_TYPE(MyStruct::MapII)
@@ -44,6 +48,9 @@ inline MyStruct::MyStruct() : A()
 	std::call_once(of, [this]()
 	{
 		RRTR_REGISTER_SUPERCLASS(RTTR::Public, A);
+
+		RTTR_REGISTER_STATIC_MEMBER(RTTR::Public, s_d);
+
 		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, a);
 		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Protected, b);
 		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Private, map);

@@ -24,29 +24,75 @@ namespace RTTR
 		Type* type{ nullptr };
 	};
 
-	struct NormalMemberInfo
+	struct MemberInfo
 	{
-		std::string name;
+		std::string name{};
 		Interview interview{ None };
 		Type* type{ nullptr };
-		int offset{ -1 };
+	};
+
+	struct StaticMemberInfo : public MemberInfo
+	{
+		void* address{ nullptr };
+	};
+
+	struct NormalMemberInfo : public MemberInfo
+	{
+		int* offset{ nullptr };
+	};
+
+	struct MethodInfo
+	{
+		std::string name{};
+		Interview interview{ None };
+		Type* returnType{ nullptr };
+		std::list<std::pair<std::string, Type*>> args{};
+		void* address{ nullptr };
+	};
+
+	struct StaticMethodInfo : public MethodInfo
+	{
+
+	};
+
+	struct NormalMethodInfo : public MethodInfo
+	{
+
 	};
 
 	class TypeImpl;
 	class Type
 	{
 	public:
+		/// <summary>
+		/// 查找一个类型
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
 		static Type* find(const std::string& name);
 
 	protected:
-		static inline std::unordered_map<std::string, Type*> s_types;
+		/// <summary>
+		/// 注册一种类型
+		/// </summary>
+		/// <param name="type"></param>
+		static void registerType(Type* type);
 
 	public:
 		Type();
 		virtual ~Type();
 
 	public:
+		/// <summary>
+		/// 获取类型名称
+		/// </summary>
+		/// <returns></returns>
 		virtual std::string name() const = 0;
+
+		/// <summary>
+		/// 获取类型大小
+		/// </summary>
+		/// <returns></returns>
 		virtual size_t size() const = 0;
 
 	public:
@@ -70,6 +116,25 @@ namespace RTTR
 		std::optional<SuperclassInfo> superclass(const std::string& name) const;
 
 		/// <summary>
+		/// 注册静态成员变量信息
+		/// </summary>
+		/// <param name="info"></param>
+		void registerStaticMember(const StaticMemberInfo& info);
+
+		/// <summary>
+		/// 获取所有静态成员变量名
+		/// </summary>
+		/// <returns></returns>
+		std::list<std::string> staticMemberNames() const;
+
+		/// <summary>
+		/// 获取静态成员变量信息
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		std::optional<StaticMemberInfo> staticMember(const std::string& name) const;
+
+		/// <summary>
 		/// 注册普通成员变量信息
 		/// </summary>
 		/// <param name="info"></param>
@@ -86,7 +151,7 @@ namespace RTTR
 		/// </summary>
 		/// <param name="name"></param>
 		/// <returns></returns>
-		std::optional<NormalMemberInfo> normalMember(const std::string & name) const;
+		std::optional<NormalMemberInfo> normalMember(const std::string& name) const;
 
 	private:
 		std::unique_ptr<TypeImpl> m_impl{};
@@ -118,7 +183,7 @@ namespace RTTR \
 		size_t size() const override { return sizeof(T); } \
 \
 	private: \
-		RealType<T>() : Type() { s_types[#T] = this; } \
+		RealType<T>() : Type() { registerType(this); } \
 		~RealType<T>() = default; \
 	}; \
 }
@@ -132,13 +197,21 @@ do \
 } \
 while (false)
 
+//注册静态成员变量
+#define RTTR_REGISTER_STATIC_MEMBER(Interview, Name) \
+do \
+{ \
+	using T = std::remove_reference<decltype(*this)>::type; \
+	RTTR::RealType<T>::instance()->registerStaticMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), &T::Name}); \
+} \
+while (false)
+
 //注册类普通成员变量
 #define RTTR_REGISTER_NORMAL_MEMBER(Interview, Name) \
 do \
 { \
 	using T = std::remove_reference<decltype(*this)>::type; \
 	auto offset{ &T::Name }; \
-	RTTR::RealType<T>::instance()->registerNormalMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), *(int*)(&offset)}); \
+	RTTR::RealType<T>::instance()->registerNormalMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), (int*)(&offset)}); \
 } \
 while (false)
-
