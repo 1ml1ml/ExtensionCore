@@ -1,0 +1,270 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "sub/Extension/Extension.exe"
+		},
+		{
+			"path" : "sub/Extension/Extension.pdb"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"include_directories"
+		],
+		"files" : 
+		[
+			"sub/Extension/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 18,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 7,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -std:c++17 -ZI"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/AbstractCoreExtension"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/AbstractExtension"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/AbstractLogic"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/LibraryCoreFactory"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/LibraryFactory"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/LibraryFactoryManager"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/ExtensionManager"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "E:/Git/Framework/sub/Extension/src/RTTR"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "17"
+			},
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				16
+			]
+		}
+	],
+	"id" : "Extension::@ab8e98cef47cc242280f",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "/DWIN32 /D_WINDOWS /W3 /GR /EHsc /MDd /Ob0 /Od /RTC1 -ZI",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "/machine:x64 /debug /INCREMENTAL /subsystem:console",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "Extension",
+	"nameOnDisk" : "Extension.exe",
+	"paths" : 
+	{
+		"build" : "sub/Extension",
+		"source" : "sub/Extension"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				2,
+				4,
+				6,
+				8,
+				10,
+				12,
+				14,
+				16
+			]
+		},
+		{
+			"name" : "Header Files",
+			"sourceIndexes" : 
+			[
+				1,
+				3,
+				5,
+				7,
+				9,
+				11,
+				13,
+				15
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/AbstractCoreExtension/AbstractCoreExtension.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/AbstractCoreExtension/AbstractCoreExtension.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/AbstractExtension/AbstractExtension.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/AbstractExtension/AbstractExtension.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/AbstractLogic/AbstractLogic.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/AbstractLogic/AbstractLogic.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/ExtensionManager/ExtensionManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/ExtensionManager/ExtensionManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/LibraryCoreFactory/LibraryCoreFactory.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/LibraryCoreFactory/LibraryCoreFactory.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/LibraryFactory/LibraryFactory.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/LibraryFactory/LibraryFactory.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/LibraryFactoryManager/LibraryFactoryManager.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/LibraryFactoryManager/LibraryFactoryManager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/RTTR/RTTR.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "sub/Extension/src/RTTR/RTTR.hpp",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "sub/Extension/src/main.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}
