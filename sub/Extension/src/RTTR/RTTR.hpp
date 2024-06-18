@@ -10,7 +10,7 @@ namespace RTTR
 {
 	class Type;
 
-	enum InheritanceMode : unsigned char
+	enum Interview : unsigned char
 	{
 		None = 0,
 		Public,
@@ -20,14 +20,14 @@ namespace RTTR
 
 	struct SuperclassInfo
 	{
-		InheritanceMode im{ None };
+		Interview interview{ None };
 		Type* type{ nullptr };
 	};
 
 	struct NormalMemberInfo
 	{
 		std::string name;
-		InheritanceMode im{ None };
+		Interview interview{ None };
 		Type* type{ nullptr };
 		int offset{ -1 };
 	};
@@ -96,6 +96,7 @@ namespace RTTR
 	class RealType : public Type { };
 }
 
+//注册类型
 #define RTTR_REGISTER_TYPE(T) \
 namespace RTTR \
 { \
@@ -122,20 +123,22 @@ namespace RTTR \
 	}; \
 }
 
-#define RRTR_REGISTER_SUPERCLASS(IM, Superclass) \
+//注册父类
+#define RRTR_REGISTER_SUPERCLASS(Interview, Superclass) \
 do \
 { \
 	using T = std::remove_reference<decltype(*this)>::type; \
-	RTTR::RealType<T>::instance()->registerSuperclass({IM, RTTR::RealType<Superclass>::instance()}); \
+	RTTR::RealType<T>::instance()->registerSuperclass({Interview, RTTR::RealType<Superclass>::instance()}); \
 } \
 while (false)
 
-#define RTTR_REGISTER_NORMAL_MEMBER(IM, Name) \
+//注册类普通成员变量
+#define RTTR_REGISTER_NORMAL_MEMBER(Interview, Name) \
 do \
 { \
 	using T = std::remove_reference<decltype(*this)>::type; \
 	auto offset{ &T::Name }; \
-	RTTR::RealType<T>::instance()->registerNormalMember({#Name, IM, RTTR::RealType<decltype(T::Name)>::instance(), *(int*)(&offset)}); \
+	RTTR::RealType<T>::instance()->registerNormalMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), *(int*)(&offset)}); \
 } \
 while (false)
 

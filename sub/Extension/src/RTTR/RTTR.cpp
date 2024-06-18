@@ -32,7 +32,7 @@ RTTR::Type::~Type() = default;
 
 void RTTR::Type::registerSuperclass(const SuperclassInfo& info)
 {
-	assert(info.im != RTTR::None && info.type != nullptr);
+	assert(info.interview != RTTR::None && info.type != nullptr);
 
 	if (false == superclass(info.type->name()).has_value()) m_impl->superclass.insert({ info.type->name(), info });
 }
@@ -52,7 +52,7 @@ std::optional<RTTR::SuperclassInfo> RTTR::Type::superclass(const std::string& na
 
 void RTTR::Type::registerNormalMember(const NormalMemberInfo& info)
 {
-	assert(false == info.name.empty() && info.im != None && info.type != nullptr && info.offset >= 0);
+	assert(false == info.name.empty() && info.interview != None && info.type != nullptr && info.offset >= 0);
 
 	if (false == normalMember(info.name).has_value()) m_impl->members.insert({ info.name, info });
 }

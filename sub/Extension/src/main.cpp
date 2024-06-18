@@ -2,21 +2,24 @@
 
 #include "RTTR/RTTR.hpp"
 
-struct A
-{
-
-};
+struct A { };
 RTTR_REGISTER_TYPE(A)
 
 struct MyStruct : public A
 {
 public:
 	using MapII = std::unordered_map<int, int>;
+
+public:
 	MyStruct();
 
-private:
+public:
 	int a{ 0 };
+
+protected:
 	std::string b{};
+
+private:
 	MapII map;
 };
 RTTR_REGISTER_TYPE(MyStruct)
@@ -28,13 +31,9 @@ RTTR_REGISTER_TYPE(MyStruct::MapII)
 int main()
 {
 	MyStruct{};
-	MyStruct{};
-	MyStruct{};
-	MyStruct{};
-	MyStruct{};
 
-	auto t1{ RTTR::Type::find("MyStruct") };
-	std::cout << t1->name() << ' ' << t1->size() << ' ' << t1->normalMember("map")->type->name() << std::endl;
+	auto type{ RTTR::Type::find("MyStruct") };
+	std::cout << type->name() << ' ' << type->size() << ' ' << type->normalMember("map")->type->name() << std::endl;
 
 	return 0;
 }
@@ -45,8 +44,8 @@ inline MyStruct::MyStruct() : A()
 	std::call_once(of, [this]()
 	{
 		RRTR_REGISTER_SUPERCLASS(RTTR::Public, A);
-		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Private, a);
-		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Private, b);
+		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, a);
+		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Protected, b);
 		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Private, map);
 	});
 }
