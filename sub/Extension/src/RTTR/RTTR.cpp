@@ -146,3 +146,30 @@ std::list<RTTR::StaticMethodInfo> RTTR::TypeInfo::staticMethod(const std::string
 	while (pair.first != pair.second) methods.push_back(pair.first++->second);
 	return methods;
 }
+
+bool RTTR::TypeInfo::registerNormalMethod(const NormalMethodInfo& info)
+{
+	assert(false == info.name.empty() && info.interview != None && info.returnInfo != nullptr && info.address != nullptr);
+
+	if (auto methods{ normalMethod(info.name) }; std::find_if(methods.begin(), methods.end(), [&info](const NormalMethodInfo& val) { return val.address == info.address; }) == methods.end())
+	{
+		m_impl->normalMethods.insert({ info.name, info });
+		return true;
+	}
+	return false;
+}
+
+std::unordered_set<std::string> RTTR::TypeInfo::normalMethodNames() const
+{
+	std::unordered_set<std::string> names{};
+	for (const auto& [name, info] : m_impl->normalMethods) names.insert(name);
+	return names;
+}
+
+std::list<RTTR::NormalMethodInfo> RTTR::TypeInfo::normalMethod(const std::string& name) const
+{
+	auto pair{ m_impl->normalMethods.equal_range(name) };
+	std::list<RTTR::NormalMethodInfo> methods;
+	while (pair.first != pair.second) methods.push_back(pair.first++->second);
+	return methods;
+}

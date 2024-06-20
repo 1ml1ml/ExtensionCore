@@ -2,64 +2,103 @@
 
 #include "RTTR/RTTR.hpp"
 
-struct A { };
-RTTR_REGISTER_TYPE(A)
+RTTR_REGISTER(int)
+RTTR_REGISTER(void)
 
-class MyStruct : public A
+struct ExampleSuperclass
 {
 public:
-	using MapII = std::unordered_map<int, int>;
+	static inline int s_i{ 100 };
 
 public:
-	static inline double s_d;
+	static void func1(int)
+	{
+		std::cout << "func1_int" << std::endl;
+	}
+
+	static void func1(int, int)
+	{
+		std::cout << "func1_int_in" << std::endl;
+	}
 
 public:
-	static int s_test(int, int, int, int) { return 0; }
-	static int test() { return 0; }
+	ExampleSuperclass();
 
 public:
-	MyStruct();
+	virtual void func2(int)
+	{
+		std::cout << "func2_int" << std::endl;
+	}
+
+	void func2(int, int)
+	{
+		std::cout << "func2_int_int" << std::endl;
+	}
 
 public:
-	int a{ 0 };
-
-protected:
-	std::string b{};
-
-private:
-	MapII map;
+	int m_i{ 50 };
 };
-RTTR_REGISTER_TYPE(MyStruct)
+RTTR_REGISTER(ExampleSuperclass)
 
-RTTR_REGISTER_TYPE(void)
-RTTR_REGISTER_TYPE(double)
-RTTR_REGISTER_TYPE(int)
-RTTR_REGISTER_TYPE(std::string)
-RTTR_REGISTER_TYPE(MyStruct::MapII)
+struct Example : public ExampleSuperclass
+{
+public:
+	Example();
+
+public:
+	void func2(int) override
+	{
+		std::cout << "override func2_int" << std::endl;
+	}
+};
+RTTR_REGISTER(Example)
 
 int main()
 {
-	MyStruct{};
+	ExampleSuperclass es{};
+	Example e{};
 
-	auto type{ RTTR::TypeInfo::find("MyStruct") };
-	std::cout << type->name() << ' ' << type->size() << ' ' << type->normalMember("map")->info->name() << std::endl;
+	auto esT{ RTTR::TypeInfo::find("struct ExampleSuperclass") };
+	std::cout << esT->name() << " " << esT->size() << " " << std::endl;
+
+	std::cout << esT->staticMember("s_i")->value<int>() << std::endl;
+	std::cout << esT->normalMember("m_i")->value<ExampleSuperclass, int>(&es) << std::endl;
+
+	esT->staticMethod("func1").front().call<void(*)(int)>(0);
+	esT->staticMethod("func1").back().call<void(*)(int, int)>(0, 0);
+
+	esT->normalMethod("func2").front().call<void(ExampleSuperclass::*)(int)>(&es, 0);
+	esT->normalMethod("func2").back().call<void(ExampleSuperclass::*)(int, int)>(&es, 0, 0);
+
+	auto eT{ RTTR::TypeInfo::find("struct Example") };
+	eT->normalMethod("func2").front().call<void(Example::*)(int)>(&e, 0);
 
 	return 0;
 }
 
-inline MyStruct::MyStruct() : A()
+ExampleSuperclass::ExampleSuperclass()
 {
-	RTTR_REGISTER_STATIC_METHOD(MyStruct, RTTR::Public, s_test, int, int, int, int);
-
 	static std::once_flag of;
 	std::call_once(of, [this]()
-	{
-		RRTR_REGISTER_SUPERCLASS(RTTR::Public, A);
+		{
+			RTTR_REGISTER_STATIC_MEMBER(RTTR::Public, s_i);
+			RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, m_i);
 
-		RTTR_REGISTER_STATIC_MEMBER(MyStruct, RTTR::Public, s_d);
+			RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int);
+			RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int, int);
 
-		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, a);
-		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Protected, b);
-		RTTR_REGISTER_NORMAL_MEMBER(RTTR::Private, map);
-	});
+			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
+			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int, int);
+		});
+}
+
+Example::Example() : ExampleSuperclass()
+{
+	static std::once_flag of;
+	std::call_once(of, [this]()
+		{
+			RRTR_REGISTER_SUPERCLASS(RTTR::Public, ExampleSuperclass);
+
+			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
+		});
 }

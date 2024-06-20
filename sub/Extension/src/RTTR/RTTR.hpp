@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <typeinfo>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -20,38 +21,88 @@ namespace RTTR
 		Private,
 	};
 
+	/// <summary>
+	/// 超类信息
+	/// </summary>
 	struct SuperclassInfo
 	{
 		Interview interview{ None };
 		TypeInfo* info{ nullptr };
 	};
 
+	/// <summary>
+	/// 成员信息
+	/// </summary>
 	struct MemberInfo
 	{
+	public:
 		std::string name{};
 		Interview interview{ None };
 		TypeInfo* info{ nullptr };
 	};
 
+	/// <summary>
+	/// 静态成员信息
+	/// </summary>
 	struct StaticMemberInfo : public MemberInfo
 	{
+	public:
+		template<typename T>
+		T value()
+		{
+			return *reinterpret_cast<T*>(address);
+		}
+
+	public:
 		void* address{ nullptr };
 	};
 
+	/// <summary>
+	/// 普通成员信息
+	/// </summary>
 	struct NormalMemberInfo : public MemberInfo
 	{
+	public:
+		template<typename O, typename M>
+		M value(O* o)
+		{
+			return *reinterpret_cast<M*>((reinterpret_cast<unsigned char*>(o) + offset));
+		}
+	public:
 		int offset{ 0 };
 	};
 
+	/// <summary>
+	/// 方法信息
+	/// </summary>
 	struct MethodInfo
 	{
 	public:
+		/// <summary>
+		/// 解析模板类型包返回对应的Type对象
+		/// </summary>
+		/// <typeparam name="...Args"></typeparam>
+		/// <returns></returns>
 		template<typename... Args>
 		static std::list<TypeInfo*> unpackArgs() 
 		{
 			std::list<TypeInfo*> args;
 			(args.push_back(RealTypeInfo<Args>::instance()), ...);
 			return args;
+		}
+
+	public:
+		/// <summary>
+		/// 调用方法
+		/// </summary>
+		/// <typeparam name="F">函数类型</typeparam>
+		/// <typeparam name="...Args"></typeparam>
+		/// <param name="...args"></param>
+		/// <returns></returns>
+		template<typename F, typename... Args>
+		decltype(auto) call(Args&&... args)
+		{
+			return std::invoke(*(F*)&address, std::forward<Args>(args)...);
 		}
 
 	public:
@@ -62,6 +113,9 @@ namespace RTTR
 		void* address{ nullptr };
 	};
 
+	/// <summary>
+	/// 静态方法信息
+	/// </summary>
 	struct StaticMethodInfo : public MethodInfo { };
 
 	struct NormalMethodInfo : public MethodInfo { };
@@ -77,13 +131,6 @@ namespace RTTR
 		/// <returns></returns>
 		static TypeInfo* find(const std::string& name);
 
-		template<typename T>
-		static size_t Sizeof()
-		{
-			if constexpr (std::is_void_v<T>) return 0;
-			else return sizeof(T);
-		}
-
 	protected:
 		/// <summary>
 		/// 注册一种类型
@@ -91,6 +138,14 @@ namespace RTTR
 		/// <param name="type"></param>
 		/// <returns></returns>
 		static bool registerType(TypeInfo* type);
+
+	protected:
+		template<typename T>
+		static size_t Sizeof()
+		{
+			if constexpr (std::is_void_v<T>) return 0;
+			else return sizeof(T);
+		}
 
 	public:
 		TypeInfo();
@@ -108,6 +163,12 @@ namespace RTTR
 		/// </summary>
 		/// <returns></returns>
 		virtual size_t size() const = 0;
+
+		/// <summary>
+		/// 获取std类型的type_info
+		/// </summary>
+		/// <returns></returns>
+		virtual const std::type_info& std_type_info() const = 0;
 
 	public:
 		/// <summary>
@@ -130,40 +191,40 @@ namespace RTTR
 		std::optional<SuperclassInfo> superclass(const std::string& name) const;
 
 		/// <summary>
-		/// 注册静态成员变量信息
+		/// 注册静态成员信息
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
 		bool registerStaticMember(const StaticMemberInfo& info);
 
 		/// <summary>
-		/// 获取所有静态成员变量名
+		/// 获取所有静态成员名
 		/// </summary>
 		/// <returns></returns>
 		std::list<std::string> staticMemberNames() const;
 
 		/// <summary>
-		/// 获取静态成员变量信息
+		/// 获取静态成员信息
 		/// </summary>
 		/// <param name="name"></param>
 		/// <returns></returns>
 		std::optional<StaticMemberInfo> staticMember(const std::string& name) const;
 
 		/// <summary>
-		/// 注册普通成员变量信息
+		/// 注册普通成员信息
 		/// </summary>
 		/// <param name="info"></param>
 		/// <returns></returns>
 		bool registerNormalMember(const NormalMemberInfo& info);
 
 		/// <summary>
-		/// 获取所有普通成员变量名
+		/// 获取所有普通成员名
 		/// </summary>
 		/// <returns></returns>
 		std::list<std::string> normalMemberNames() const;
 
 		/// <summary>
-		/// 获取普通成员变量信息
+		/// 获取普通成员信息
 		/// </summary>
 		/// <param name="name"></param>
 		/// <returns></returns>
@@ -189,6 +250,26 @@ namespace RTTR
 		/// <returns></returns>
 		std::list<StaticMethodInfo> staticMethod(const std::string& name) const;
 
+		/// <summary>
+		/// 注册普通方法信息
+		/// </summary>
+		/// <param name="info"></param>
+		/// <returns></returns>
+		bool registerNormalMethod(const NormalMethodInfo& info);
+
+		/// <summary>
+		/// 获取所有普通方法名称
+		/// </summary>
+		/// <returns></returns>
+		std::unordered_set<std::string> normalMethodNames() const;
+
+		/// <summary>
+		/// 获取普通方法信息
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		std::list<NormalMethodInfo> normalMethod(const std::string& name) const;
+
 	private:
 		std::unique_ptr<TypeInfoImpl> m_impl{};
 	};
@@ -198,7 +279,7 @@ namespace RTTR
 }
 
 //注册类型
-#define RTTR_REGISTER_TYPE(T) \
+#define RTTR_REGISTER(T) \
 namespace RTTR \
 { \
 	template<> \
@@ -215,8 +296,9 @@ namespace RTTR \
 		} \
 \
 	public: \
-		std::string name() const override { return #T; } \
+		std::string name() const override { return std_type_info().name(); } \
 		size_t size() const override { return Sizeof<T>(); } \
+		const std::type_info& std_type_info() const override { return typeid(T); } \
 \
 	private: \
 		RealTypeInfo<T>() : TypeInfo() { registerType(this); } \
@@ -234,9 +316,10 @@ do \
 while (false)
 
 //注册静态成员变量
-#define RTTR_REGISTER_STATIC_MEMBER(T, Interview, Name) \
+#define RTTR_REGISTER_STATIC_MEMBER(Interview, Name) \
 do \
 { \
+	using T = std::remove_reference_t<decltype(*this)>; \
 	RTTR::RealTypeInfo<T>::instance()->registerStaticMember({ #Name, Interview, RTTR::RealTypeInfo<decltype(T::Name)>::instance(), &T::Name }); \
 } \
 while (false)
@@ -252,9 +335,21 @@ do \
 while (false)
 
 //注册静态方法
-#define RTTR_REGISTER_STATIC_METHOD(T, Interview, Name, ...) \
+#define RTTR_REGISTER_STATIC_METHOD(Interview, R, Name, ...) \
 do \
 { \
-	RTTR::RealTypeInfo<T>::instance()->registerStaticMethod({ #Name, Interview, RTTR::RealTypeInfo<std::invoke_result_t<decltype(T::Name), __VA_ARGS__>>::instance(), RTTR::MethodInfo::unpackArgs<__VA_ARGS__>(), T::Name }); \
+	using T = std::remove_reference_t<decltype(*this)>; \
+	R (*address)(__VA_ARGS__){ T::Name }; \
+	RTTR::RealTypeInfo<T>::instance()->registerStaticMethod({ #Name, Interview, RTTR::RealTypeInfo<R>::instance(), RTTR::MethodInfo::unpackArgs<__VA_ARGS__>(), address }); \
+} \
+while (false)
+
+//注册普通方法
+#define RTTR_REGISTER_NORMAL_METHOD(Interview, R, Name, ...) \
+do \
+{ \
+	using T = std::remove_reference_t<decltype(*this)>; \
+	R (T::*address)(__VA_ARGS__){ &T::Name }; \
+	RTTR::RealTypeInfo<T>::instance()->registerNormalMethod({ #Name, Interview, RTTR::RealTypeInfo<R>::instance(), RTTR::MethodInfo::unpackArgs<__VA_ARGS__>(), *(void**)&address }); \
 } \
 while (false)
