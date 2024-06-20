@@ -48,10 +48,7 @@ namespace RTTR
 	{
 	public:
 		template<typename T>
-		T value()
-		{
-			return *reinterpret_cast<T*>(address);
-		}
+		T value() { return *reinterpret_cast<T*>(address); }
 
 	public:
 		void* address{ nullptr };
@@ -64,10 +61,8 @@ namespace RTTR
 	{
 	public:
 		template<typename O, typename M>
-		M value(O* o)
-		{
-			return *reinterpret_cast<M*>((reinterpret_cast<unsigned char*>(o) + offset));
-		}
+		M value(O* o) { return *reinterpret_cast<M*>((reinterpret_cast<unsigned char*>(o) + offset)); }
+
 	public:
 		int offset{ 0 };
 	};
@@ -100,10 +95,7 @@ namespace RTTR
 		/// <param name="...args"></param>
 		/// <returns></returns>
 		template<typename F, typename... Args>
-		decltype(auto) call(Args&&... args)
-		{
-			return std::invoke(*(F*)&address, std::forward<Args>(args)...);
-		}
+		decltype(auto) call(Args&&... args) { return std::invoke(*(F*)&address, std::forward<Args>(args)...); }
 
 	public:
 		std::string name{};

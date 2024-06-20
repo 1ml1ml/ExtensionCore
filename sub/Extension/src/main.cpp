@@ -73,6 +73,9 @@ int main()
 	auto eT{ RTTR::TypeInfo::find("struct Example") };
 	eT->normalMethod("func2").front().call<void(Example::*)(int)>(&e, 0);
 
+	esT = eT->superclass("struct ExampleSuperclass").value().info;
+	std::cout << esT->name() << " " << esT->size() << " " << std::endl;
+
 	return 0;
 }
 

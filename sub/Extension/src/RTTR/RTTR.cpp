@@ -9,16 +9,16 @@ namespace RTTR
 	class TypeInfoImpl
 	{
 	public:
-		static inline std::unordered_map<std::string, TypeInfo*> s_types;
+		static inline std::unordered_map<std::string, TypeInfo*> s_infos;
 
 	public:
 		TypeInfoImpl() = default;
 
 	public:
-		std::unordered_map<std::string, SuperclassInfo> superclass;			//父类
+		std::list<SuperclassInfo> superclass;									//父类
 
-		std::unordered_map<std::string, StaticMemberInfo> staticMembers;	//静态成员变量
-		std::unordered_map<std::string, NormalMemberInfo> normalMembers;	//普通成员变量
+		std::unordered_map<std::string, StaticMemberInfo> staticMembers;		//静态成员变量
+		std::unordered_map<std::string, NormalMemberInfo> normalMembers;		//普通成员变量
 
 		std::unordered_multimap<std::string, StaticMethodInfo> staticMethods;	//静态方法
 		std::unordered_multimap<std::string, NormalMethodInfo> normalMethods;	//普通方法
@@ -27,8 +27,8 @@ namespace RTTR
 
 RTTR::TypeInfo* RTTR::TypeInfo::find(const std::string& name)
 {
-	auto find{ TypeInfoImpl::s_types.find(name) };
-	return find != TypeInfoImpl::s_types.end() ? find->second : nullptr;
+	auto find{ TypeInfoImpl::s_infos.find(name) };
+	return find != TypeInfoImpl::s_infos.end() ? find->second : nullptr;
 }
 
 bool RTTR::TypeInfo::registerType(TypeInfo* type)
@@ -37,7 +37,7 @@ bool RTTR::TypeInfo::registerType(TypeInfo* type)
 
 	if (find(type->name()) == nullptr)
 	{
-		TypeInfoImpl::s_types.insert({ type->name(), type });
+		TypeInfoImpl::s_infos.insert({ type->name(), type });
 		return true;
 	}
 	return false;
@@ -54,20 +54,20 @@ void RTTR::TypeInfo::registerSuperclass(const SuperclassInfo& info)
 {
 	assert(info.interview != RTTR::None && info.info != nullptr);
 
-	if (false == superclass(info.info->name()).has_value()) m_impl->superclass.insert({ info.info->name(), info });
+	if (false == superclass(info.info->name()).has_value()) m_impl->superclass.push_back(info);
 }
 
 std::list<std::string> RTTR::TypeInfo::superclassNames() const
 {
 	std::list<std::string> names;
-	for (const auto& [name, info] : m_impl->superclass) names.push_back(name);
+	for (const auto& val : m_impl->superclass) names.push_back(val.info->name());
 	return names;
 }
 
 std::optional<RTTR::SuperclassInfo> RTTR::TypeInfo::superclass(const std::string& name) const
 {
-	auto find{ m_impl->superclass.find(name) };
-	return find != m_impl->superclass.end() ? std::optional{ find->second } : std::nullopt;
+	auto find{ std::find_if(m_impl->superclass.begin(), m_impl->superclass.end(), [&name](const SuperclassInfo& val) { return val.info->name() == name; }) };
+	return find != m_impl->superclass.end() ? std::optional{ *find } : std::nullopt;
 }
 
 bool RTTR::TypeInfo::registerStaticMember(const StaticMemberInfo& info)
