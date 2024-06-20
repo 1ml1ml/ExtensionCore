@@ -4,11 +4,13 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace RTTR
 {
-	class Type;
+	class TypeInfo;
 
 	enum Interview : unsigned char
 	{
@@ -21,14 +23,14 @@ namespace RTTR
 	struct SuperclassInfo
 	{
 		Interview interview{ None };
-		Type* type{ nullptr };
+		TypeInfo* info{ nullptr };
 	};
 
 	struct MemberInfo
 	{
 		std::string name{};
 		Interview interview{ None };
-		Type* type{ nullptr };
+		TypeInfo* info{ nullptr };
 	};
 
 	struct StaticMemberInfo : public MemberInfo
@@ -38,30 +40,34 @@ namespace RTTR
 
 	struct NormalMemberInfo : public MemberInfo
 	{
-		int* offset{ nullptr };
+		int offset{ 0 };
 	};
 
 	struct MethodInfo
 	{
+	public:
+		template<typename... Args>
+		static std::list<TypeInfo*> unpackArgs() 
+		{
+			std::list<TypeInfo*> args;
+			(args.push_back(RealTypeInfo<Args>::instance()), ...);
+			return args;
+		}
+
+	public:
 		std::string name{};
 		Interview interview{ None };
-		Type* returnType{ nullptr };
-		std::list<std::pair<std::string, Type*>> args{};
+		TypeInfo* returnInfo{ nullptr };
+		std::list<TypeInfo*> args{};
 		void* address{ nullptr };
 	};
 
-	struct StaticMethodInfo : public MethodInfo
-	{
+	struct StaticMethodInfo : public MethodInfo { };
 
-	};
+	struct NormalMethodInfo : public MethodInfo { };
 
-	struct NormalMethodInfo : public MethodInfo
-	{
-
-	};
-
-	class TypeImpl;
-	class Type
+	class TypeInfoImpl;
+	class TypeInfo
 	{
 	public:
 		/// <summary>
@@ -69,18 +75,26 @@ namespace RTTR
 		/// </summary>
 		/// <param name="name"></param>
 		/// <returns></returns>
-		static Type* find(const std::string& name);
+		static TypeInfo* find(const std::string& name);
+
+		template<typename T>
+		static size_t Sizeof()
+		{
+			if constexpr (std::is_void_v<T>) return 0;
+			else return sizeof(T);
+		}
 
 	protected:
 		/// <summary>
 		/// 注册一种类型
 		/// </summary>
 		/// <param name="type"></param>
-		static void registerType(Type* type);
+		/// <returns></returns>
+		static bool registerType(TypeInfo* type);
 
 	public:
-		Type();
-		virtual ~Type();
+		TypeInfo();
+		virtual ~TypeInfo();
 
 	public:
 		/// <summary>
@@ -119,7 +133,8 @@ namespace RTTR
 		/// 注册静态成员变量信息
 		/// </summary>
 		/// <param name="info"></param>
-		void registerStaticMember(const StaticMemberInfo& info);
+		/// <returns></returns>
+		bool registerStaticMember(const StaticMemberInfo& info);
 
 		/// <summary>
 		/// 获取所有静态成员变量名
@@ -138,7 +153,8 @@ namespace RTTR
 		/// 注册普通成员变量信息
 		/// </summary>
 		/// <param name="info"></param>
-		void registerNormalMember(const NormalMemberInfo& info);
+		/// <returns></returns>
+		bool registerNormalMember(const NormalMemberInfo& info);
 
 		/// <summary>
 		/// 获取所有普通成员变量名
@@ -153,12 +169,32 @@ namespace RTTR
 		/// <returns></returns>
 		std::optional<NormalMemberInfo> normalMember(const std::string& name) const;
 
+		/// <summary>
+		/// 注册静态方法
+		/// </summary>
+		/// <param name="info"></param>
+		/// <returns></returns>
+		bool registerStaticMethod(const StaticMethodInfo& info);
+
+		/// <summary>
+		/// 获取所有静态方法名称
+		/// </summary>
+		/// <returns></returns>
+		std::unordered_set<std::string> staticMethodNames() const;
+
+		/// <summary>
+		/// 获取静态方法信息
+		/// </summary>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		std::list<StaticMethodInfo> staticMethod(const std::string& name) const;
+
 	private:
-		std::unique_ptr<TypeImpl> m_impl{};
+		std::unique_ptr<TypeInfoImpl> m_impl{};
 	};
 
 	template<typename T>
-	class RealType : public Type { };
+	class RealTypeInfo : public TypeInfo { };
 }
 
 //注册类型
@@ -166,25 +202,25 @@ namespace RTTR
 namespace RTTR \
 { \
 	template<> \
-	class RealType<T> final : public Type \
+	class RealTypeInfo<T> final : public TypeInfo \
 	{ \
 	public: \
 		using Value = T; \
 \
 	public: \
-		static RealType<T>* instance() \
+		static RealTypeInfo<T>* instance() \
 		{ \
-			static RealType<T> instance{}; \
+			static RealTypeInfo<T> instance{}; \
 			return &instance; \
 		} \
 \
 	public: \
 		std::string name() const override { return #T; } \
-		size_t size() const override { return sizeof(T); } \
+		size_t size() const override { return Sizeof<T>(); } \
 \
 	private: \
-		RealType<T>() : Type() { registerType(this); } \
-		~RealType<T>() = default; \
+		RealTypeInfo<T>() : TypeInfo() { registerType(this); } \
+		~RealTypeInfo<T>() = default; \
 	}; \
 }
 
@@ -192,17 +228,16 @@ namespace RTTR \
 #define RRTR_REGISTER_SUPERCLASS(Interview, Superclass) \
 do \
 { \
-	using T = std::remove_reference<decltype(*this)>::type; \
-	RTTR::RealType<T>::instance()->registerSuperclass({Interview, RTTR::RealType<Superclass>::instance()}); \
+	using T = std::remove_reference_t<decltype(*this)>; \
+	RTTR::RealTypeInfo<T>::instance()->registerSuperclass({ Interview, RTTR::RealTypeInfo<Superclass>::instance() }); \
 } \
 while (false)
 
 //注册静态成员变量
-#define RTTR_REGISTER_STATIC_MEMBER(Interview, Name) \
+#define RTTR_REGISTER_STATIC_MEMBER(T, Interview, Name) \
 do \
 { \
-	using T = std::remove_reference<decltype(*this)>::type; \
-	RTTR::RealType<T>::instance()->registerStaticMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), &T::Name}); \
+	RTTR::RealTypeInfo<T>::instance()->registerStaticMember({ #Name, Interview, RTTR::RealTypeInfo<decltype(T::Name)>::instance(), &T::Name }); \
 } \
 while (false)
 
@@ -210,8 +245,16 @@ while (false)
 #define RTTR_REGISTER_NORMAL_MEMBER(Interview, Name) \
 do \
 { \
-	using T = std::remove_reference<decltype(*this)>::type; \
+	using T = std::remove_reference_t<decltype(*this)>; \
 	auto offset{ &T::Name }; \
-	RTTR::RealType<T>::instance()->registerNormalMember({#Name, Interview, RTTR::RealType<decltype(T::Name)>::instance(), (int*)(&offset)}); \
+	RTTR::RealTypeInfo<T>::instance()->registerNormalMember({ #Name, Interview, RTTR::RealTypeInfo<decltype(T::Name)>::instance(), *(int*)(&offset) }); \
+} \
+while (false)
+
+//注册静态方法
+#define RTTR_REGISTER_STATIC_METHOD(T, Interview, Name, ...) \
+do \
+{ \
+	RTTR::RealTypeInfo<T>::instance()->registerStaticMethod({ #Name, Interview, RTTR::RealTypeInfo<std::invoke_result_t<decltype(T::Name), __VA_ARGS__>>::instance(), RTTR::MethodInfo::unpackArgs<__VA_ARGS__>(), T::Name }); \
 } \
 while (false)
