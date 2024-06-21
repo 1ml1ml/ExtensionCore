@@ -12,7 +12,6 @@ include_directories(
 	"src/LibraryCoreFactory"
 	"src/LibraryFactory"
 	"src/LibraryFactoryManager"
-	"src/ExtensionManager"
-	"src/RTTR")
+	"src/ExtensionManager")
 
 add_executable(${PROJECT_NAME} ${src})
