@@ -25,19 +25,19 @@ namespace RTTR
 	};
 }
 
-RTTR::TypeInfo* RTTR::TypeInfo::find(const std::string& name)
+RTTR::TypeInfo* RTTR::TypeInfo::info(const std::string& name)
 {
 	auto find{ TypeInfoImpl::s_infos.find(name) };
 	return find != TypeInfoImpl::s_infos.end() ? find->second : nullptr;
 }
 
-bool RTTR::TypeInfo::registerType(TypeInfo* type)
+bool RTTR::TypeInfo::registerTypeInfo(TypeInfo* info)
 {
-	assert(type != nullptr);
+	assert(info != nullptr);
 
-	if (find(type->name()) == nullptr)
+	if (TypeInfo::info(info->name()) == nullptr)
 	{
-		TypeInfoImpl::s_infos.insert({ type->name(), type });
+		TypeInfoImpl::s_infos.insert({ info->name(), info });
 		return true;
 	}
 	return false;

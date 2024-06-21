@@ -4,11 +4,12 @@
 
 RTTR_REGISTER(int)
 RTTR_REGISTER(void)
+RTTR_REGISTER(std::string)
 
 struct ExampleSuperclass
 {
 public:
-	static inline int s_i{ 100 };
+	static inline std::string s_i{ "s_i"};
 
 public:
 	static void func1(int)
@@ -36,7 +37,7 @@ public:
 	}
 
 public:
-	int m_i{ 50 };
+	std::string m_i{ "m_i"};
 };
 RTTR_REGISTER(ExampleSuperclass)
 
@@ -56,52 +57,52 @@ RTTR_REGISTER(Example)
 int main()
 {
 	ExampleSuperclass es{};
-	Example e{};
 
-	auto esT{ RTTR::TypeInfo::find("struct ExampleSuperclass") };
+	auto esT{ RTTR::TypeInfo::info("struct ExampleSuperclass") };
 	std::cout << esT->name() << " " << esT->size() << " " << std::endl;
 
-	std::cout << esT->staticMember("s_i")->value<int>() << std::endl;
-	std::cout << esT->normalMember("m_i")->value<ExampleSuperclass, int>(&es) << std::endl;
+	std::cout << esT->staticMember("s_i")->value<std::string>() << std::endl;
+	std::cout << esT->normalMember("m_i")->value<ExampleSuperclass, std::string>(&es) << std::endl;
 
-	esT->staticMethod("func1").front().call<void(*)(int)>(0);
-	esT->staticMethod("func1").back().call<void(*)(int, int)>(0, 0);
+	esT->staticMethod("func1").front().invoke<void(*)(int)>(0);
+	esT->staticMethod("func1").back().invoke<void(*)(int, int)>(0, 0);
 
-	esT->normalMethod("func2").front().call<void(ExampleSuperclass::*)(int)>(&es, 0);
-	esT->normalMethod("func2").back().call<void(ExampleSuperclass::*)(int, int)>(&es, 0, 0);
+	esT->normalMethod("func2").front().invoke<void(ExampleSuperclass::*)(int)>(&es, 0);
+	esT->normalMethod("func2").back().invoke<void(ExampleSuperclass::*)(int, int)>(&es, 0, 0);
 
-	auto eT{ RTTR::TypeInfo::find("struct Example") };
-	eT->normalMethod("func2").front().call<void(Example::*)(int)>(&e, 0);
+	Example e{};
+
+	auto eT{ RTTR::TypeInfo::info("struct Example") };
+	eT->normalMethod("func2").front().invoke<void(Example::*)(int)>(&e, 0);
 
 	esT = eT->superclass("struct ExampleSuperclass").value().info;
 	std::cout << esT->name() << " " << esT->size() << " " << std::endl;
+
+	RTTR::invokeStaticMethod<ExampleSuperclass, void(*)(int)>("func1", 0);
+	RTTR::invokeNormalMethod<ExampleSuperclass, void(ExampleSuperclass::*)(int)>("func2", &es, 0);
+	RTTR::invokeNormalMethod<Example, void(Example::*)(int)>("func2", &e, 0);
+
+	std::cout << RTTR::valueStaticMember<ExampleSuperclass, std::string>("s_i") << std::endl;
+	std::cout << RTTR::valueNormalMember<ExampleSuperclass, std::string>("m_i", &es) << std::endl;
 
 	return 0;
 }
 
 ExampleSuperclass::ExampleSuperclass()
 {
-	static std::once_flag of;
-	std::call_once(of, [this]()
-		{
-			RTTR_REGISTER_STATIC_MEMBER(RTTR::Public, s_i);
-			RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, m_i);
+	RTTR_REGISTER_STATIC_MEMBER(RTTR::Public, s_i);
+	RTTR_REGISTER_NORMAL_MEMBER(RTTR::Public, m_i);
 
-			RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int);
-			RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int, int);
+	RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int);
+	RTTR_REGISTER_STATIC_METHOD(RTTR::Public, void, func1, int, int);
 
-			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
-			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int, int);
-		});
+	RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
+	RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int, int);
 }
 
 Example::Example() : ExampleSuperclass()
 {
-	static std::once_flag of;
-	std::call_once(of, [this]()
-		{
-			RRTR_REGISTER_SUPERCLASS(RTTR::Public, ExampleSuperclass);
+	RRTR_REGISTER_SUPERCLASS(RTTR::Public, ExampleSuperclass);
 
-			RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
-		});
+	RTTR_REGISTER_NORMAL_METHOD(RTTR::Public, void, func2, int);
 }
