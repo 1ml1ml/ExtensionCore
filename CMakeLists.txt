@@ -12,7 +12,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-project ("Framework")
+project ("ExtensionCore")
 
 # 包含子项目。
-add_subdirectory ("sub/Extension")
+add_subdirectory ("sub/ExtensionCore")
